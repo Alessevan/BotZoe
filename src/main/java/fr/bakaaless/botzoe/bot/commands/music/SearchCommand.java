@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import java.util.List;
 import java.util.regex.Matcher;
 
-public class PlayCommand extends MusicCommand {
+public class SearchCommand extends MusicCommand {
 
     @Override
     public void run(GuildMessageReceivedEvent event, String command, List<String> arguments) {
@@ -19,14 +19,13 @@ public class PlayCommand extends MusicCommand {
             return;
         }
         final Matcher matcher = MusicModule.get().getYoutubeURL().matcher(arguments.get(0));
-        if (!matcher.find()) {
-            SearchCommand.run(event, arguments);
+        if (matcher.find()) {
+            PlayCommand.run(event, matcher.group());
             return;
         }
-        run(event, matcher.group());
     }
 
-    public static void run(final GuildMessageReceivedEvent event, final String link) {
+    public static void run(final GuildMessageReceivedEvent event, final List<String> arguments) {
 
     }
 
