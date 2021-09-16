@@ -7,7 +7,9 @@ import java.util.List;
 public class LeaveCommand extends MusicCommand {
     @Override
     public void run(GuildMessageReceivedEvent event, String command, List<String> arguments) {
-        if (!super.canSendHere(event))
+        if (!super.canSendHere(event) || event.getMember() == null)
+            return;
+        if (!super.isInChannel(event.getMember(), false))
             return;
     }
 }

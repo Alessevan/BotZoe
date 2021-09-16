@@ -6,7 +6,7 @@ import fr.bakaaless.botzoe.bot.commands.misc.ActivityCommand;
 import fr.bakaaless.botzoe.bot.commands.misc.EightBallCommand;
 import fr.bakaaless.botzoe.bot.commands.misc.ExecuteCommand;
 import fr.bakaaless.botzoe.bot.commands.misc.RandomUserCommand;
-import fr.bakaaless.botzoe.bot.commands.music.PlayCommand;
+import fr.bakaaless.botzoe.bot.commands.music.*;
 import fr.bakaaless.botzoe.bot.events.Elections;
 import fr.bakaaless.botzoe.bot.listeners.BotListener;
 import fr.bakaaless.botzoe.starter.Starter;
@@ -86,7 +86,13 @@ public class Bot {
     }
 
     public void setupMusic() {
+        CommandManager.register("clear", new ClearCommand());
+        CommandManager.register("join", new JoinCommand());
+        CommandManager.register("leave", new LeaveCommand());
         CommandManager.register("play", new PlayCommand());
+        CommandManager.register("queue", new QueueCommand());
+        CommandManager.register("search", new SearchCommand());
+        CommandManager.register("skip", new SkipCommand());
     }
 
     public void setupMisc() {

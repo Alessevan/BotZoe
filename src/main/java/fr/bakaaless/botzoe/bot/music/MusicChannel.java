@@ -1,5 +1,7 @@
 package fr.bakaaless.botzoe.bot.music;
 
+import fr.bakaaless.botzoe.starter.Config;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +33,12 @@ public class MusicChannel {
         this.searchResultMessages.remove(searchMessage);
     }
 
-    public void addMusicYoutubeLink(final String link, final long id) {
+    /**
+     * Add a music to the queue.
+     * @param link The music's link
+     * @param authorId the user's authorId who ask to add the music
+     */
+    public void addMusicYoutubeLink(final String link, final long authorId) {
 
     }
 

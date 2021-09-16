@@ -44,10 +44,10 @@ public class Starter {
                 file.createNewFile();
                 final String json = gson.toJson(Config.get());
                 FileUtils.write(file, json, StandardCharsets.UTF_8);
-                logger.log(org.apache.log4j.Level.INFO, "Config file created. Shutdown to let you write your token in the config file.");
+                logger.log(Level.INFO, "Config file created. Shutdown to let you write your token in the config file.");
                 System.exit(0);
             } catch (IOException e) {
-                logger.log(org.apache.log4j.Level.FATAL, "Can't create config file or write in it.", e);
+                logger.log(Level.FATAL, "Can't create config file or write in it.", e);
                 System.exit(1);
             }
         } else {
@@ -76,8 +76,12 @@ public class Starter {
             }
         }
         bot = Bot.generate(Config.get().getToken());
-        bot.setupMisc();
+        logger.log(Level.INFO, "Setup elections' commands...");
         bot.setupElections();
+        logger.log(Level.INFO, "Setup music's commands...");
+        bot.setupMusic();
+        logger.log(Level.INFO, "Setup misc' commands...");
+        bot.setupMisc();
         Updater.get().start();
 
         consoleThread = new Thread(() -> {

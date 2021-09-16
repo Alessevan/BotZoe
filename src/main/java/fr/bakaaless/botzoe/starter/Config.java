@@ -18,9 +18,10 @@ public class Config {
         return new Config();
     }
 
-    private String version = "1.0.1";
+    private String version = "1.0.2";
     private String token = "";
     private String prefix = "&";
+    private Long musicChannel = 0L;
     private Long electionsWinnerId = 0L;
     private Long electionsDuration = 10 * 60 * 60L;
     private Long[] electionsRanks = new Long[0];
@@ -38,6 +39,10 @@ public class Config {
 
     public String getPrefix() {
         return this.prefix;
+    }
+
+    public Long getMusicChannelId() {
+        return this.musicChannel;
     }
 
     public Long getElectionsWinnerId() {
