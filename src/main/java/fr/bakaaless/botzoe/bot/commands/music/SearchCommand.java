@@ -13,7 +13,7 @@ public class SearchCommand extends MusicCommand {
     public void run(GuildMessageReceivedEvent event, String command, List<String> arguments) {
         if (!super.canSendHere(event) || event.getMember() == null)
             return;
-        if (!super.isInChannel(event.getMember(), true))
+        if (!super.isInChannel(event.getChannel(), event.getMember(), true))
             return;
 
         event.getMessage().delete().queue();
@@ -21,8 +21,8 @@ public class SearchCommand extends MusicCommand {
             return;
         }
         final Matcher matcher = MusicModule.get().getYoutubeURL().matcher(arguments.get(0));
-        if (matcher.find()) {
-            PlayCommand.run(event, matcher.group());
+        while (matcher.find()) {
+            PlayCommand.run(event, arguments.get(0));
             return;
         }
     }

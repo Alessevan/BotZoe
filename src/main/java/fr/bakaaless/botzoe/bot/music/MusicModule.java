@@ -10,12 +10,12 @@ public class MusicModule {
         return instance;
     }
 
-
     private final MusicChannel channel;
-    private final Pattern youtubeURL = Pattern.compile("https?://youtu(?:.be/|be.com/watch?v=)");
+    private final Pattern youtubeURL = Pattern.compile("https?://(www.)?youtu(?:.be/|be.com/watch\\?v=)");
 
     public MusicModule(final MusicChannel channel) {
         this.channel = channel;
+        instance = this;
     }
 
     public MusicChannel getChannel() {

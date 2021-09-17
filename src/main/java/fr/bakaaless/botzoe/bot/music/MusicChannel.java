@@ -1,21 +1,45 @@
 package fr.bakaaless.botzoe.bot.music;
 
-import fr.bakaaless.botzoe.starter.Config;
+import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
+import com.sedmelluq.discord.lavaplayer.player.*;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import fr.bakaaless.botzoe.bot.Bot;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.TextChannel;
 
+import java.awt.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class MusicChannel {
 
     private final long channelId;
-
     private long messageId;
 
+    private final AudioPlayerManager playerManager;
+    private final AudioPlayer audioPlayer;
+    private final TrackScheduler tracks;
     private List<SearchMessage> searchResultMessages;
 
     public MusicChannel(final long channelId) {
         this.channelId = channelId;
+        this.playerManager = new DefaultAudioPlayerManager();
+        this.playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
+        AudioSourceManagers.registerRemoteSources(this.playerManager);
+
+        this.audioPlayer = this.playerManager.createPlayer();
+
+        this.tracks = new TrackScheduler(this.audioPlayer);
+        this.audioPlayer.addListener(this.tracks);
+
         this.searchResultMessages = new ArrayList<>();
     }
 
@@ -39,10 +63,96 @@ public class MusicChannel {
      * @param authorId the user's authorId who ask to add the music
      */
     public void addMusicYoutubeLink(final String link, final long authorId) {
+        if (this.channelId == 0L)
+            return;
+        final TextChannel channel = Bot.get().getJda().getTextChannelById(this.channelId);
+        if (channel == null)
+            return;
 
+        Bot.get().getJda().getTextChannelById(this.channelId).getGuild().getAudioManager().setSendingHandler(new AudioPlayerSendHandler(this.audioPlayer));
+        this.playerManager.loadItemOrdered(this.playerManager, link, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(final AudioTrack track) {
+                play(channel, track, authorId);
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+                AudioTrack firstTrack = playlist.getSelectedTrack();
+
+                if (firstTrack == null) {
+                    firstTrack = playlist.getTracks().get(0);
+                }
+                play(channel, firstTrack, authorId);
+            }
+
+            @Override
+            public void noMatches() {
+                final MessageEmbed embed = new EmbedBuilder()
+                        .setAuthor("Erreur")
+                        .setColor(Color.RED)
+                        .setDescription("Impossible de trouver une musique avec le lien " + link + ".")
+                        .setTimestamp(Instant.now())
+                        .setFooter("<#" + authorId + ">")
+                        .build();
+                channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
+            }
+
+            @Override
+            public void loadFailed(FriendlyException exception) {
+                final MessageEmbed embed = new EmbedBuilder()
+                        .setAuthor("Erreur")
+                        .setColor(Color.RED)
+                        .setDescription("Impossible de charger la piste. ")
+                        .addField("Sortie : ", exception.getMessage(), true)
+                        .setTimestamp(Instant.now())
+                        .setFooter("<#" + authorId + ">")
+                        .build();
+                channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
+                exception.printStackTrace();
+            }
+        });
+    }
+
+    private void play(final TextChannel channel, final AudioTrack track, final long authorId) {
+        if (this.audioPlayer.getPlayingTrack() != null) {
+            final MessageEmbed embed = new EmbedBuilder()
+                    .setAuthor("Ajout d'une piste", track.getInfo().uri)
+                    .setDescription(track.getInfo().title + " - " + track.getInfo().author)
+                    .setColor(Color.ORANGE)
+                    .setTimestamp(Instant.now())
+                    .setFooter("<#" + authorId + ">")
+                    .build();
+            channel.sendMessageEmbeds(embed).queue();
+        }
+        this.tracks.queue(track);
     }
 
     public long getChannelId() {
         return this.channelId;
+    }
+
+    public void generateMessage(final AudioTrack track) {
+        if (this.channelId != 0L) {
+            final TextChannel channel = Bot.get().getJda().getTextChannelById(this.channelId);
+            if (channel != null) {
+                final MessageEmbed embed = new EmbedBuilder()
+                        .setAuthor(track.getInfo().title + " - " + track.getInfo().author, track.getInfo().uri)
+                        .setColor(Color.GREEN)
+                        .setTimestamp(Instant.now())
+                        .build();
+                channel.sendMessageEmbeds(embed).queue(message -> this.messageId = message.getIdLong());
+            }
+        }
+    }
+
+    public void resetMessageId() {
+        if (this.channelId != 0L) {
+            final TextChannel channel = Bot.get().getJda().getTextChannelById(this.channelId);
+            if (channel != null) {
+                channel.retrieveMessageById(this.messageId).queue(message -> message.delete().queue());
+                this.messageId = 0L;
+            }
+        }
     }
 }

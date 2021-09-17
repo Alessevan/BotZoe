@@ -9,7 +9,8 @@ public class LeaveCommand extends MusicCommand {
     public void run(GuildMessageReceivedEvent event, String command, List<String> arguments) {
         if (!super.canSendHere(event) || event.getMember() == null)
             return;
-        if (!super.isInChannel(event.getMember(), false))
+        if (!super.isInChannel(event.getChannel(), event.getMember(), false))
             return;
+        event.getMessage().delete().queue();
     }
 }

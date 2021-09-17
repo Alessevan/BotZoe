@@ -9,6 +9,9 @@ import fr.bakaaless.botzoe.bot.commands.misc.RandomUserCommand;
 import fr.bakaaless.botzoe.bot.commands.music.*;
 import fr.bakaaless.botzoe.bot.events.Elections;
 import fr.bakaaless.botzoe.bot.listeners.BotListener;
+import fr.bakaaless.botzoe.bot.music.MusicChannel;
+import fr.bakaaless.botzoe.bot.music.MusicModule;
+import fr.bakaaless.botzoe.starter.Config;
 import fr.bakaaless.botzoe.starter.Starter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -41,6 +44,7 @@ public class Bot {
     }
 
     private final JDA jda;
+    private MusicModule musicModule;
 
     private Bot(final String token) throws LoginException, InterruptedException {
         this.jda = JDABuilder
@@ -86,6 +90,7 @@ public class Bot {
     }
 
     public void setupMusic() {
+        this.musicModule = new MusicModule(new MusicChannel(Config.get().getMusicChannelId()));
         CommandManager.register("clear", new ClearCommand());
         CommandManager.register("join", new JoinCommand());
         CommandManager.register("leave", new LeaveCommand());
@@ -109,6 +114,7 @@ public class Bot {
 
     public void shutdown() {
         try {
+            MusicModule.get().getChannel().resetMessageId();
             this.jda.getPresence().setStatus(OnlineStatus.OFFLINE);
             this.jda.shutdown();
         } catch (Exception e) {
