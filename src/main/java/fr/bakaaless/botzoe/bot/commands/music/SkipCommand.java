@@ -1,5 +1,6 @@
 package fr.bakaaless.botzoe.bot.commands.music;
 
+import fr.bakaaless.botzoe.bot.music.MusicModule;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
 import java.util.List;
@@ -13,5 +14,6 @@ public class SkipCommand extends MusicCommand {
         if (!super.isInChannel(event.getChannel(), event.getMember(), false))
             return;
         event.getMessage().delete().queue();
+        MusicModule.get().getChannel().skip();
     }
 }

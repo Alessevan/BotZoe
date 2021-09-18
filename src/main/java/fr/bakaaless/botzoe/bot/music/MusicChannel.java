@@ -1,20 +1,20 @@
 package fr.bakaaless.botzoe.bot.music;
 
-import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import fr.bakaaless.botzoe.bot.Bot;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.awt.*;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -34,11 +34,13 @@ public class MusicChannel {
         this.playerManager = new DefaultAudioPlayerManager();
         this.playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
         AudioSourceManagers.registerRemoteSources(this.playerManager);
+        AudioSourceManagers.registerLocalSource(this.playerManager);
 
         this.audioPlayer = this.playerManager.createPlayer();
 
         this.tracks = new TrackScheduler(this.audioPlayer);
         this.audioPlayer.addListener(this.tracks);
+        Bot.get().getJda().getGuilds().forEach(guild -> guild.getAudioManager().closeAudioConnection());
 
         this.searchResultMessages = new ArrayList<>();
     }
@@ -69,6 +71,7 @@ public class MusicChannel {
         if (channel == null)
             return;
 
+        final Member user = channel.getGuild().getMemberById(authorId);
         Bot.get().getJda().getTextChannelById(this.channelId).getGuild().getAudioManager().setSendingHandler(new AudioPlayerSendHandler(this.audioPlayer));
         this.playerManager.loadItemOrdered(this.playerManager, link, new AudioLoadResultHandler() {
             @Override
@@ -93,7 +96,7 @@ public class MusicChannel {
                         .setColor(Color.RED)
                         .setDescription("Impossible de trouver une musique avec le lien " + link + ".")
                         .setTimestamp(Instant.now())
-                        .setFooter("<#" + authorId + ">")
+                        .setFooter(user != null ? user.getEffectiveName() : "", user != null ? user.getUser().getAvatarUrl() : "")
                         .build();
                 channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
             }
@@ -106,7 +109,7 @@ public class MusicChannel {
                         .setDescription("Impossible de charger la piste. ")
                         .addField("Sortie : ", exception.getMessage(), true)
                         .setTimestamp(Instant.now())
-                        .setFooter("<#" + authorId + ">")
+                        .setFooter(user != null ? user.getEffectiveName() : "", user != null ? user.getUser().getAvatarUrl() : "")
                         .build();
                 channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
                 exception.printStackTrace();
@@ -116,12 +119,13 @@ public class MusicChannel {
 
     private void play(final TextChannel channel, final AudioTrack track, final long authorId) {
         if (this.audioPlayer.getPlayingTrack() != null) {
+            final Member user = channel.getGuild().getMemberById(authorId);
             final MessageEmbed embed = new EmbedBuilder()
                     .setAuthor("Ajout d'une piste", track.getInfo().uri)
-                    .setDescription(track.getInfo().title + " - " + track.getInfo().author)
+                    .setDescription(track.getInfo().title + " - " + track.getInfo().author + System.lineSeparator())
                     .setColor(Color.ORANGE)
                     .setTimestamp(Instant.now())
-                    .setFooter("<#" + authorId + ">")
+                    .setFooter(user != null ? user.getEffectiveName() : "", user != null ? user.getUser().getAvatarUrl() : "")
                     .build();
             channel.sendMessageEmbeds(embed).queue();
         }
@@ -154,5 +158,13 @@ public class MusicChannel {
                 this.messageId = 0L;
             }
         }
+    }
+
+    public void skip() {
+        this.tracks.nextTrack();
+    }
+
+    public LinkedList<AudioTrack> getTracks() {
+        return this.tracks.getTracks();
     }
 }

@@ -2,10 +2,7 @@ package fr.bakaaless.botzoe.bot;
 
 import fr.bakaaless.botzoe.bot.commands.CommandManager;
 import fr.bakaaless.botzoe.bot.commands.elections.ElectionsCommand;
-import fr.bakaaless.botzoe.bot.commands.misc.ActivityCommand;
-import fr.bakaaless.botzoe.bot.commands.misc.EightBallCommand;
-import fr.bakaaless.botzoe.bot.commands.misc.ExecuteCommand;
-import fr.bakaaless.botzoe.bot.commands.misc.RandomUserCommand;
+import fr.bakaaless.botzoe.bot.commands.misc.*;
 import fr.bakaaless.botzoe.bot.commands.music.*;
 import fr.bakaaless.botzoe.bot.events.Elections;
 import fr.bakaaless.botzoe.bot.listeners.BotListener;

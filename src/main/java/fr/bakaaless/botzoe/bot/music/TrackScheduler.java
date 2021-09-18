@@ -4,7 +4,11 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import fr.bakaaless.botzoe.bot.Bot;
+import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.entities.Activity;
 
+import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -37,6 +41,7 @@ public class TrackScheduler extends AudioEventAdapter {
             this.queue.offer(track);
         } else {
             MusicModule.get().getChannel().generateMessage(track);
+            Bot.get().getJda().getPresence().setActivity(Activity.listening(track.getInfo().title));
         }
     }
 
@@ -49,6 +54,9 @@ public class TrackScheduler extends AudioEventAdapter {
         final AudioTrack toPlay = this.queue.poll();
         if (this.player.startTrack(toPlay, false)) {
             MusicModule.get().getChannel().generateMessage(toPlay);
+            Bot.get().getJda().getPresence().setActivity(Activity.listening(toPlay.getInfo().title));
+        } else {
+            Bot.get().getJda().getPresence().setPresence(OnlineStatus.ONLINE, null, true);
         }
 
     }
@@ -60,5 +68,9 @@ public class TrackScheduler extends AudioEventAdapter {
         if (endReason.mayStartNext) {
             this.nextTrack();
         }
+    }
+
+    public LinkedList<AudioTrack> getTracks() {
+        return new LinkedList<>(this.queue);
     }
 }

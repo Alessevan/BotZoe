@@ -35,19 +35,22 @@ public abstract class MusicCommand implements CommandExecutor {
             if (self.getVoiceState() != null && self.getVoiceState().inVoiceChannel()) {
                 if (member.getVoiceState().getChannel().getIdLong() == self.getVoiceState().getChannel().getIdLong())
                     return true;
-                alreadyInChannel(channel, member);
+                this.alreadyInChannel(channel, member);
                 return false;
             } else if (join) {
                 try {
                     guild.getAudioManager().openAudioConnection(member.getVoiceState().getChannel());
                     return true;
                 } catch (InsufficientPermissionException ignored) {
-                    cannotJoinChannel(channel, member);
+                    this.cannotJoinChannel(channel, member);
                     return false;
                 }
+            } else {
+                this.selfNotInChannel(channel, member);
+                return false;
             }
         }
-        notInChannel(channel, member);
+        this.notInChannel(channel, member);
         return false;
     }
 
@@ -57,7 +60,7 @@ public abstract class MusicCommand implements CommandExecutor {
                 .setColor(Color.RED)
                 .setDescription("Vous ne pouvez utiliser les commandes de musique que dans le salon <#" + MusicModule.get().getChannel().getChannelId() + ">.")
                 .setTimestamp(Instant.now())
-                .setFooter(member.getEffectiveName())
+                .setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl())
                 .build();
         channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
     }
@@ -68,7 +71,18 @@ public abstract class MusicCommand implements CommandExecutor {
                 .setColor(Color.RED)
                 .setDescription("Vous n'êtes pas dans un salon vocal.")
                 .setTimestamp(Instant.now())
-                .setFooter(member.getEffectiveName())
+                .setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl())
+                .build();
+        channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
+    }
+
+    public void selfNotInChannel(final TextChannel channel, final Member member) {
+        final MessageEmbed embed = new EmbedBuilder()
+                .setAuthor("Erreur")
+                .setColor(Color.RED)
+                .setDescription("Le bot n'est pas dans un salon vocal.")
+                .setTimestamp(Instant.now())
+                .setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl())
                 .build();
         channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
     }
@@ -79,7 +93,7 @@ public abstract class MusicCommand implements CommandExecutor {
                 .setColor(Color.RED)
                 .setDescription("Le bot est déjà dans un salon vocal différent du vôtre.")
                 .setTimestamp(Instant.now())
-                .setFooter(member.getEffectiveName())
+                .setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl())
                 .build();
         channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
     }
@@ -90,7 +104,7 @@ public abstract class MusicCommand implements CommandExecutor {
                 .setColor(Color.RED)
                 .setDescription("Le bot ne peut pas aller dans votre salon.")
                 .setTimestamp(Instant.now())
-                .setFooter(member.getEffectiveName())
+                .setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl())
                 .build();
         channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
     }
