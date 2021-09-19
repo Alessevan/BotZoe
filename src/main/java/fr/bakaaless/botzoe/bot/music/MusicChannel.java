@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 
 public class MusicChannel {
 
@@ -27,7 +28,7 @@ public class MusicChannel {
     private final AudioPlayerManager playerManager;
     private final AudioPlayer audioPlayer;
     private final TrackScheduler tracks;
-    private List<SearchMessage> searchResultMessages;
+    private final List<SearchMessage> searchResultMessages;
 
     public MusicChannel(final long channelId) {
         this.channelId = channelId;
@@ -120,14 +121,22 @@ public class MusicChannel {
     private void play(final TextChannel channel, final AudioTrack track, final long authorId) {
         if (this.audioPlayer.getPlayingTrack() != null) {
             final Member user = channel.getGuild().getMemberById(authorId);
-            final MessageEmbed embed = new EmbedBuilder()
-                    .setAuthor("Ajout d'une piste", track.getInfo().uri)
-                    .setDescription(track.getInfo().title + " - " + track.getInfo().author + System.lineSeparator())
+            final Matcher matcher = MusicModule.get().getYoutubeURL().matcher(track.getInfo().uri);
+            final EmbedBuilder embed = new EmbedBuilder()
+                    .setAuthor("Ajout d'une piste")
+                    .addField("Titre", track.getInfo().title, false)
+                    .addField("Auteur", track.getInfo().author, true)
+                    .addField("Durée", fromDuration(track.getDuration()), false)
                     .setColor(Color.ORANGE)
                     .setTimestamp(Instant.now())
                     .setFooter(user != null ? user.getEffectiveName() : "", user != null ? user.getUser().getAvatarUrl() : "")
-                    .build();
-            channel.sendMessageEmbeds(embed).queue();
+                    ;
+            if (matcher.find()) {
+                final String youtubeId = matcher.group(2);
+                embed.setAuthor("Ajout d'une piste", track.getInfo().uri)
+                        .setThumbnail("https://img.youtube.com/vi/" + youtubeId + "/maxresdefault.jpg");
+            }
+            channel.sendMessageEmbeds(embed.build()).queue();
         }
         this.tracks.queue(track);
     }
@@ -140,14 +149,28 @@ public class MusicChannel {
         if (this.channelId != 0L) {
             final TextChannel channel = Bot.get().getJda().getTextChannelById(this.channelId);
             if (channel != null) {
-                final MessageEmbed embed = new EmbedBuilder()
-                        .setAuthor(track.getInfo().title + " - " + track.getInfo().author, track.getInfo().uri)
+                final Matcher matcher = MusicModule.get().getYoutubeURL().matcher(track.getInfo().uri);
+                final EmbedBuilder embed = new EmbedBuilder()
+                        .setAuthor(track.getInfo().title + " - " + track.getInfo().author)
+                        .setDescription("Informations sur la musique :")
+                        .addField("Durée", fromDuration(track.getDuration()), false)
                         .setColor(Color.GREEN)
                         .setTimestamp(Instant.now())
-                        .build();
-                channel.sendMessageEmbeds(embed).queue(message -> this.messageId = message.getIdLong());
+                        ;
+                if (matcher.find()) {
+                    final String youtubeId = matcher.group(2);
+                    embed.setAuthor(track.getInfo().title + " - " + track.getInfo().author, track.getInfo().uri)
+                            .setThumbnail("https://img.youtube.com/vi/" + youtubeId + "/maxresdefault.jpg");
+                }
+                channel.sendMessageEmbeds(embed.build()).queue(message -> this.messageId = message.getIdLong());
             }
         }
+    }
+
+    private String fromDuration(final long duration) {
+        final int seconds = (int) (duration / 1000) % 60;
+        final int minutes = (int) (duration / 1000D) / 60;
+        return (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
     }
 
     public void resetMessageId() {

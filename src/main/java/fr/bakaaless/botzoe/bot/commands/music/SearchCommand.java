@@ -1,6 +1,5 @@
 package fr.bakaaless.botzoe.bot.commands.music;
 
-import fr.bakaaless.botzoe.bot.commands.CommandExecutor;
 import fr.bakaaless.botzoe.bot.music.MusicModule;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
@@ -25,6 +24,7 @@ public class SearchCommand extends MusicCommand {
             PlayCommand.run(event, arguments.get(0));
             return;
         }
+        run(event, arguments);
     }
 
     public static void run(final GuildMessageReceivedEvent event, final List<String> arguments) {

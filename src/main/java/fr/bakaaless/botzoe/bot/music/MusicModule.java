@@ -11,7 +11,7 @@ public class MusicModule {
     }
 
     private final MusicChannel channel;
-    private final Pattern youtubeURL = Pattern.compile("https?://(www.)?youtu(?:.be/|be.com/watch\\?v=)");
+    private final Pattern youtubeURL = Pattern.compile("https?://(www.)?youtu(?:.be/|be.com/watch\\?v=)([a-zA-Z0-9_-]+)&?");
 
     public MusicModule(final MusicChannel channel) {
         this.channel = channel;
