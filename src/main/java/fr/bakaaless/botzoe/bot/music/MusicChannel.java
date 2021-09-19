@@ -10,13 +10,12 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.interactions.components.Button;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
@@ -29,6 +28,7 @@ public class MusicChannel {
     private final AudioPlayer audioPlayer;
     private final TrackScheduler tracks;
     private final List<SearchMessage> searchResultMessages;
+    private final HashMap<AudioTrack, Long> musicExecutor;
 
     public MusicChannel(final long channelId) {
         this.channelId = channelId;
@@ -44,6 +44,7 @@ public class MusicChannel {
         Bot.get().getJda().getGuilds().forEach(guild -> guild.getAudioManager().closeAudioConnection());
 
         this.searchResultMessages = new ArrayList<>();
+        this.musicExecutor = new HashMap<>();
     }
 
     public boolean isSearchResult(final long messageId) {
@@ -77,6 +78,10 @@ public class MusicChannel {
         this.playerManager.loadItemOrdered(this.playerManager, link, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(final AudioTrack track) {
+                if (track.getInfo().isStream) {
+                    loadFailed(new FriendlyException("La vidéo est un stream en cours", FriendlyException.Severity.COMMON, null));
+                    return;
+                }
                 play(channel, track, authorId);
             }
 
@@ -87,6 +92,11 @@ public class MusicChannel {
                 if (firstTrack == null) {
                     firstTrack = playlist.getTracks().get(0);
                 }
+                if (firstTrack.getInfo().isStream) {
+                    loadFailed(new FriendlyException("La vidéo est un stream en cours", FriendlyException.Severity.COMMON, null));
+                    return;
+                }
+
                 play(channel, firstTrack, authorId);
             }
 
@@ -113,28 +123,30 @@ public class MusicChannel {
                         .setFooter(user != null ? user.getEffectiveName() : "", user != null ? user.getUser().getAvatarUrl() : "")
                         .build();
                 channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
-                exception.printStackTrace();
+                if (!exception.getMessage().equalsIgnoreCase("La vidéo est un stream en cours"))
+                    exception.printStackTrace();
             }
         });
     }
 
     private void play(final TextChannel channel, final AudioTrack track, final long authorId) {
+        this.musicExecutor.put(track, authorId);
         if (this.audioPlayer.getPlayingTrack() != null) {
             final Member user = channel.getGuild().getMemberById(authorId);
             final Matcher matcher = MusicModule.get().getYoutubeURL().matcher(track.getInfo().uri);
             final EmbedBuilder embed = new EmbedBuilder()
                     .setAuthor("Ajout d'une piste")
-                    .addField("Titre", track.getInfo().title, false)
-                    .addField("Auteur", track.getInfo().author, true)
-                    .addField("Durée", fromDuration(track.getDuration()), false)
+                    .addField("Titre", track.getInfo().title, true)
+                    .addField("Auteur", track.getInfo().author.replace(" - Topic", ""), true)
+                    .addField("Durée", fromDuration(track.getDuration()), true)
                     .setColor(Color.ORANGE)
                     .setTimestamp(Instant.now())
                     .setFooter(user != null ? user.getEffectiveName() : "", user != null ? user.getUser().getAvatarUrl() : "")
                     ;
             if (matcher.find()) {
                 final String youtubeId = matcher.group(2);
-                embed.setAuthor("Ajout d'une piste", track.getInfo().uri)
-                        .setThumbnail("https://img.youtube.com/vi/" + youtubeId + "/maxresdefault.jpg");
+                embed.setAuthor("Joue maintenant : " + track.getInfo().title, track.getInfo().uri)
+                        .setImage("https://img.youtube.com/vi/" + youtubeId + "/maxresdefault.jpg");
             }
             channel.sendMessageEmbeds(embed.build()).queue();
         }
@@ -151,18 +163,27 @@ public class MusicChannel {
             if (channel != null) {
                 final Matcher matcher = MusicModule.get().getYoutubeURL().matcher(track.getInfo().uri);
                 final EmbedBuilder embed = new EmbedBuilder()
-                        .setAuthor(track.getInfo().title + " - " + track.getInfo().author)
+                        .setAuthor("Joue maintenant : " + track.getInfo().title)
                         .setDescription("Informations sur la musique :")
-                        .addField("Durée", fromDuration(track.getDuration()), false)
+                        .addField("Durée", fromDuration(track.getDuration()), true)
+                        .addField("Artiste", track.getInfo().author.replace(" - Topic", ""), true)
                         .setColor(Color.GREEN)
                         .setTimestamp(Instant.now())
                         ;
+                if (this.musicExecutor.containsKey(track)) {
+                    final long authorId = this.musicExecutor.remove(track);
+                    final Member user = channel.getGuild().getMemberById(authorId);
+                    embed.setFooter(user != null ? user.getEffectiveName() : "", user != null ? user.getUser().getAvatarUrl() : "");
+                }
                 if (matcher.find()) {
                     final String youtubeId = matcher.group(2);
                     embed.setAuthor(track.getInfo().title + " - " + track.getInfo().author, track.getInfo().uri)
-                            .setThumbnail("https://img.youtube.com/vi/" + youtubeId + "/maxresdefault.jpg");
+                            .setImage("https://img.youtube.com/vi/" + youtubeId + "/maxresdefault.jpg");
                 }
-                channel.sendMessageEmbeds(embed.build()).queue(message -> this.messageId = message.getIdLong());
+                final Button pause = Button.primary("pauseMusic", "Mettre en pause");
+                final Button stop = Button.danger("stopMusic", "Arrêter la musique");
+                final Button skip = Button.primary("skipMusic", "Passer la musique");
+                channel.sendMessageEmbeds(embed.build()).setActionRow(pause, stop, skip).queue(message -> this.messageId = message.getIdLong());
             }
         }
     }
@@ -173,14 +194,28 @@ public class MusicChannel {
         return (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
     }
 
+    public void pause() {
+        this.audioPlayer.setPaused(!this.audioPlayer.isPaused());
+    }
+
+    public boolean isPaused() {
+        return this.audioPlayer.isPaused();
+    }
+
     public void resetMessageId() {
         if (this.channelId != 0L) {
             final TextChannel channel = Bot.get().getJda().getTextChannelById(this.channelId);
-            if (channel != null) {
+            if (channel != null && this.messageId != 0L) {
                 channel.retrieveMessageById(this.messageId).queue(message -> message.delete().queue());
                 this.messageId = 0L;
             }
         }
+    }
+
+    public void reset() {
+        this.tracks.getTracks().clear();
+        this.audioPlayer.stopTrack();
+        this.resetMessageId();
     }
 
     public void skip() {

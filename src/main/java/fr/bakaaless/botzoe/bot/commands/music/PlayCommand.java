@@ -21,7 +21,7 @@ public class PlayCommand extends MusicCommand {
         }
         final Matcher matcher = MusicModule.get().getYoutubeURL().matcher(arguments.get(0));
 
-        while (matcher.find()) {
+        if (matcher.find()) {
             run(event, arguments.get(0));
             return;
         }

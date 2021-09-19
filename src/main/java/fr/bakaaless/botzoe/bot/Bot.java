@@ -6,6 +6,7 @@ import fr.bakaaless.botzoe.bot.commands.misc.*;
 import fr.bakaaless.botzoe.bot.commands.music.*;
 import fr.bakaaless.botzoe.bot.events.Elections;
 import fr.bakaaless.botzoe.bot.listeners.BotListener;
+import fr.bakaaless.botzoe.bot.listeners.music.*;
 import fr.bakaaless.botzoe.bot.music.MusicChannel;
 import fr.bakaaless.botzoe.bot.music.MusicModule;
 import fr.bakaaless.botzoe.starter.Config;
@@ -88,13 +89,17 @@ public class Bot {
 
     public void setupMusic() {
         this.musicModule = new MusicModule(new MusicChannel(Config.get().getMusicChannelId()));
-        CommandManager.register("clear", new ClearCommand());
         CommandManager.register("join", new JoinCommand());
         CommandManager.register("leave", new LeaveCommand());
         CommandManager.register("play", new PlayCommand());
         CommandManager.register("queue", new QueueCommand());
+        CommandManager.register("remove", new RemoveCommand());
         CommandManager.register("search", new SearchCommand());
-        CommandManager.register("skip", new SkipCommand());
+        this.jda.addEventListener(new PauseListener());
+        this.jda.addEventListener(new RemoveListener());
+        this.jda.addEventListener(new SearchListener());
+        this.jda.addEventListener(new SkipListener());
+        this.jda.addEventListener(new StopListener());
     }
 
     public void setupMisc() {

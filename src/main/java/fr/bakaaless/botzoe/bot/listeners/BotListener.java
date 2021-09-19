@@ -51,7 +51,7 @@ public class BotListener extends ListenerAdapter {
                     }
                 }
 
-                event.getChannel().sendMessage(embed.build()).queue();
+                event.getChannel().sendMessageEmbeds(embed.build()).queue();
             });
         }
     }
