@@ -18,14 +18,14 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class TrackScheduler extends AudioEventAdapter {
     private final AudioPlayer player;
-    private final BlockingQueue<AudioTrack> queue;
+    private final LinkedList<AudioTrack> queue;
 
     /**
      * @param player The audio player this scheduler uses
      */
     public TrackScheduler(final AudioPlayer player) {
         this.player = player;
-        this.queue = new LinkedBlockingQueue<>();
+        this.queue = new LinkedList<>();
     }
 
     /**
@@ -71,6 +71,6 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public LinkedList<AudioTrack> getTracks() {
-        return new LinkedList<>(this.queue);
+        return this.queue;
     }
 }

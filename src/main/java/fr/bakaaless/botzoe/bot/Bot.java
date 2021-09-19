@@ -94,10 +94,8 @@ public class Bot {
         CommandManager.register("play", new PlayCommand());
         CommandManager.register("queue", new QueueCommand());
         CommandManager.register("remove", new RemoveCommand());
-        CommandManager.register("search", new SearchCommand());
         this.jda.addEventListener(new PauseListener());
         this.jda.addEventListener(new RemoveListener());
-        this.jda.addEventListener(new SearchListener());
         this.jda.addEventListener(new SkipListener());
         this.jda.addEventListener(new StopListener());
     }

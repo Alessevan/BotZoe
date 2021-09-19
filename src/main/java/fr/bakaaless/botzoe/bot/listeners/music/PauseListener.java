@@ -1,5 +1,6 @@
 package fr.bakaaless.botzoe.bot.listeners.music;
 
+import fr.bakaaless.botzoe.bot.commands.music.MusicCommand;
 import fr.bakaaless.botzoe.bot.music.MusicModule;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -15,7 +16,7 @@ public class PauseListener extends ListenerAdapter {
 
     @Override
     public void onButtonClick(final @NotNull ButtonClickEvent event) {
-        if (event.getButton() == null || event.getButton().getId() == null || event.getMember() == null || event.getGuild().getAudioManager().getConnectedChannel() != event.getMember().getVoiceState().getChannel())
+        if (event.getButton() == null || event.getButton().getId() == null || event.getMember() == null || !MusicCommand.isInChannel(event.getTextChannel(), event.getMember(), false))
             return;
         final String buttonName = event.getButton().getId();
         if (!buttonName.equalsIgnoreCase("pauseMusic"))

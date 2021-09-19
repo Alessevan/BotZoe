@@ -13,9 +13,9 @@ public class RemoveCommand extends MusicCommand {
 
     @Override
     public void run(GuildMessageReceivedEvent event, String command, List<String> arguments) {
-        if (!super.canSendHere(event) || event.getMember() == null)
+        if (!canSendHere(event) || event.getMember() == null)
             return;
-        if (!super.isInChannel(event.getChannel(), event.getMember(), false))
+        if (!isInChannel(event.getChannel(), event.getMember(), false))
             return;
         event.getMessage().delete().queue();
         final MessageEmbed embed = new EmbedBuilder()

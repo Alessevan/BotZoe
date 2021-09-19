@@ -13,7 +13,7 @@ public class QueueCommand extends MusicCommand {
 
     @Override
     public void run(GuildMessageReceivedEvent event, String command, List<String> arguments) {
-        if (!super.canSendHere(event) || event.getMember() == null)
+        if (!canSendHere(event) || event.getMember() == null)
             return;
         event.getMessage().delete().queue();
         final StringBuilder builder = new StringBuilder();

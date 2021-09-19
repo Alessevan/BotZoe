@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.interactions.components.Button;
 import java.awt.*;
 import java.time.Instant;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
@@ -27,7 +26,6 @@ public class MusicChannel {
     private final AudioPlayerManager playerManager;
     private final AudioPlayer audioPlayer;
     private final TrackScheduler tracks;
-    private final List<SearchMessage> searchResultMessages;
     private final HashMap<AudioTrack, Long> musicExecutor;
 
     public MusicChannel(final long channelId) {
@@ -43,22 +41,7 @@ public class MusicChannel {
         this.audioPlayer.addListener(this.tracks);
         Bot.get().getJda().getGuilds().forEach(guild -> guild.getAudioManager().closeAudioConnection());
 
-        this.searchResultMessages = new ArrayList<>();
         this.musicExecutor = new HashMap<>();
-    }
-
-    public boolean isSearchResult(final long messageId) {
-        return this.searchResultMessages.stream().anyMatch(message -> message.getId() == messageId);
-    }
-
-    public void addSearchedMessage(final long messageId, final int musicIndex) {
-        final Optional<SearchMessage> searchMessageOptional = this.searchResultMessages.stream().filter(message -> message.getId() == messageId).findFirst();
-        if (searchMessageOptional.isEmpty())
-            return;
-        final SearchMessage searchMessage = searchMessageOptional.get();
-        final String link = searchMessage.getLinks()[musicIndex];
-        this.addMusicYoutubeLink(link, searchMessage.getAuthor());
-        this.searchResultMessages.remove(searchMessage);
     }
 
     /**
@@ -216,6 +199,7 @@ public class MusicChannel {
         this.tracks.getTracks().clear();
         this.audioPlayer.stopTrack();
         this.resetMessageId();
+        Bot.get().getJda().getPresence().setActivity(null);
     }
 
     public void skip() {

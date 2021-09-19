@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class MusicCommand implements CommandExecutor {
 
-    public boolean canSendHere(final GuildMessageReceivedEvent event) {
+    public static boolean canSendHere(final GuildMessageReceivedEvent event) {
         if (event.getChannel().getIdLong() == MusicModule.get().getChannel().getChannelId()) {
             return true;
         }
@@ -26,7 +26,7 @@ public abstract class MusicCommand implements CommandExecutor {
         return false;
     }
 
-    public boolean isInChannel(final TextChannel channel, final Member member, final boolean join) {
+    public static boolean isInChannel(final TextChannel channel, final Member member, final boolean join) {
         if (member.getVoiceState() != null && member.getVoiceState().inVoiceChannel()) {
             final Guild guild = Bot.get().getJda().getGuildById(member.getGuild().getIdLong());
             if (guild == null)
@@ -35,26 +35,26 @@ public abstract class MusicCommand implements CommandExecutor {
             if (self.getVoiceState() != null && self.getVoiceState().inVoiceChannel()) {
                 if (member.getVoiceState().getChannel().getIdLong() == self.getVoiceState().getChannel().getIdLong())
                     return true;
-                this.alreadyInChannel(channel, member);
+                alreadyInChannel(channel, member);
                 return false;
             } else if (join) {
                 try {
                     guild.getAudioManager().openAudioConnection(member.getVoiceState().getChannel());
                     return true;
                 } catch (InsufficientPermissionException ignored) {
-                    this.cannotJoinChannel(channel, member);
+                    cannotJoinChannel(channel, member);
                     return false;
                 }
             } else {
-                this.selfNotInChannel(channel, member);
+                selfNotInChannel(channel, member);
                 return false;
             }
         }
-        this.notInChannel(channel, member);
+        notInChannel(channel, member);
         return false;
     }
 
-    public void notInTextChannel(final TextChannel channel, final Member member) {
+    public static void notInTextChannel(final TextChannel channel, final Member member) {
         final MessageEmbed embed = new EmbedBuilder()
                 .setAuthor("Erreur")
                 .setColor(Color.RED)
@@ -65,7 +65,7 @@ public abstract class MusicCommand implements CommandExecutor {
         channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
     }
 
-    public void notInChannel(final TextChannel channel, final Member member) {
+    public static void notInChannel(final TextChannel channel, final Member member) {
         final MessageEmbed embed = new EmbedBuilder()
                 .setAuthor("Erreur")
                 .setColor(Color.RED)
@@ -76,7 +76,7 @@ public abstract class MusicCommand implements CommandExecutor {
         channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
     }
 
-    public void selfNotInChannel(final TextChannel channel, final Member member) {
+    public static void selfNotInChannel(final TextChannel channel, final Member member) {
         final MessageEmbed embed = new EmbedBuilder()
                 .setAuthor("Erreur")
                 .setColor(Color.RED)
@@ -87,7 +87,7 @@ public abstract class MusicCommand implements CommandExecutor {
         channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
     }
 
-    public void alreadyInChannel(final TextChannel channel, final Member member) {
+    public static void alreadyInChannel(final TextChannel channel, final Member member) {
         final MessageEmbed embed = new EmbedBuilder()
                 .setAuthor("Erreur")
                 .setColor(Color.RED)
@@ -98,7 +98,7 @@ public abstract class MusicCommand implements CommandExecutor {
         channel.sendMessageEmbeds(embed).queue(message -> message.delete().queueAfter(10L, TimeUnit.SECONDS));
     }
 
-    public void cannotJoinChannel(final TextChannel channel, final Member member) {
+    public static void cannotJoinChannel(final TextChannel channel, final Member member) {
         final MessageEmbed embed = new EmbedBuilder()
                 .setAuthor("Erreur")
                 .setColor(Color.RED)

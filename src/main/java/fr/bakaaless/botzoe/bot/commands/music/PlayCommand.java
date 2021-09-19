@@ -10,9 +10,9 @@ public class PlayCommand extends MusicCommand {
 
     @Override
     public void run(GuildMessageReceivedEvent event, String command, List<String> arguments) {
-        if (!super.canSendHere(event) || event.getMember() == null)
+        if (!canSendHere(event) || event.getMember() == null)
             return;
-        if (!super.isInChannel(event.getChannel(), event.getMember(), true))
+        if (!isInChannel(event.getChannel(), event.getMember(), true))
             return;
 
         event.getMessage().delete().queue();
@@ -20,15 +20,9 @@ public class PlayCommand extends MusicCommand {
             return;
         }
         final Matcher matcher = MusicModule.get().getYoutubeURL().matcher(arguments.get(0));
-
-        if (matcher.find()) {
-            run(event, arguments.get(0));
-            return;
-        }
-        SearchCommand.run(event, arguments);
-    }
-
-    public static void run(final GuildMessageReceivedEvent event, final String link) {
+        String link = arguments.get(0);
+        if (!matcher.find())
+            link = "ytsearch:" + String.join(" ", arguments);
         MusicModule.get().getChannel().addMusicYoutubeLink(link, event.getAuthor().getIdLong());
     }
 
