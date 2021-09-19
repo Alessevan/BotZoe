@@ -15,10 +15,10 @@ public class RemoveListener extends ListenerAdapter {
 
     @Override
     public void onButtonClick(final @NotNull ButtonClickEvent event) {
-        if (event.getButton() == null || event.getButton().getId() == null || event.getMember() == null || !MusicCommand.isInChannel(event.getTextChannel(), event.getMember(), false))
+        if (event.getButton() == null || event.getButton().getId() == null || event.getMember() == null)
             return;
         final String[] buttonName = event.getButton().getId().split(":");
-        if (!buttonName[0].equalsIgnoreCase("removeMusic") || !buttonName[1].equalsIgnoreCase(event.getMember().getId()))
+        if (!buttonName[0].equalsIgnoreCase("removeMusic") || !buttonName[1].equalsIgnoreCase(event.getMember().getId()) || !MusicCommand.isInChannel(event.getTextChannel(), event.getMember(), false))
             return;
         final EmbedBuilder embed = new EmbedBuilder()
                 .setColor(Color.BLACK)

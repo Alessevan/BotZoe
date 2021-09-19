@@ -16,10 +16,10 @@ public class PauseListener extends ListenerAdapter {
 
     @Override
     public void onButtonClick(final @NotNull ButtonClickEvent event) {
-        if (event.getButton() == null || event.getButton().getId() == null || event.getMember() == null || !MusicCommand.isInChannel(event.getTextChannel(), event.getMember(), false))
+        if (event.getButton() == null || event.getButton().getId() == null || event.getMember() == null)
             return;
         final String buttonName = event.getButton().getId();
-        if (!buttonName.equalsIgnoreCase("pauseMusic"))
+        if (!buttonName.equalsIgnoreCase("pauseMusic") || !MusicCommand.isInChannel(event.getTextChannel(), event.getMember(), false))
             return;
         MusicModule.get().getChannel().pause();
         final MessageEmbed embed = new EmbedBuilder()

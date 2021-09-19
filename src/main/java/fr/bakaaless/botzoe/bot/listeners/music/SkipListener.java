@@ -17,10 +17,10 @@ public class SkipListener  extends ListenerAdapter {
 
     @Override
     public void onButtonClick(final @NotNull ButtonClickEvent event) {
-        if (event.getButton() == null || event.getButton().getId() == null || event.getMember() == null || !MusicCommand.isInChannel(event.getTextChannel(), event.getMember(), false))
+        if (event.getButton() == null || event.getButton().getId() == null || event.getMember() == null)
             return;
         final String[] buttonName = event.getButton().getId().split(":");
-        if (!buttonName[0].equalsIgnoreCase("skipMusic"))
+        if (!buttonName[0].equalsIgnoreCase("skipMusic") || !MusicCommand.isInChannel(event.getTextChannel(), event.getMember(), false))
             return;
         if (buttonName.length == 1) {
             final MessageEmbed embed = new EmbedBuilder()
